@@ -1,3 +1,19 @@
+# Other files
+deprecate_script/
+NYSE_KEY/*
+log
+log/*
+NYSE_TASK
+NYSE_TASK/*
+NYSE_KEY
+NYSE_KEY/*
+ssh_key
+ssh_key/*
+other
+config.yaml
+*.log*
+test_script/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

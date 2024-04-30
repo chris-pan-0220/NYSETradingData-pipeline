@@ -1,0 +1,364 @@
+# D:\projects\IUstructure\dailytaq\2017new\dtaq116a_all except bbo 2024
+
+libname tmp1 'c:\temp';
+libname tmp2 'd:\temp';
+libname dt 'c:\TAQ work\2017new';
+
+透過fg變數創造f1~fn的日期變數，read date from dt.d2024 (c:\TAQ work\2017new\d2024)
+
+for g from 1-21 (1~21天)
+    # 取出year, month
+    %let dy=%substr(&&f&g,1,4); %let dym=%substr(&&f&g,1,6);
+
+    # 存放計算結果、壓縮起來的sas data
+    %let iupathy=k:\master2024;
+    libname taq "&iupathy";
+
+    ------------------------------------------------
+
+    # 計算EQY_US_ALL_REF_MASTER，ex: from L:\2024\EQY_US_ALL_REF_MASTER_2024\EQY_US_ALL_REF_MASTER_202401
+    %let dnow=EQY_US_ALL_REF_MASTER;
+    %let iupath=l:\2024\&dnow._&dy\&dnow._&dym;
+    # 把檔案(data source from sftp server 的 *.gz檔案)解壓縮到stdout
+    #  -y: all prompt choose YES, -so 解壓縮到stdout
+    filename ff pipe "C:\progra~1\7-Zip\7z e &iupath\&dnow._&&f&g...gz -y -so" LRECL=1000 ;  
+    
+    # taq.master&&f&g => 計算的資料表master暫時放在k:\master2024\master&&f&g
+    data taq.master&&f&g;   
+        # ... 進行一些基本的資料處理
+        # ...
+        # ...
+
+    ------------------------------------------------
+
+    # 計算EQY_US_ALL_BBO_ADMIN
+    %let dnow=EQY_US_ALL_BBO_ADMIN;
+    %let iupath=l:\2024\&dnow._&dy\&dnow._&dym;
+    
+    # 解壓縮到stdout 
+    filename ff pipe "C:\progra~1\7-Zip\7z e &iupath\&dnow._&&f&g...gz -y -so" LRECL=1000 ;  
+
+    # 計算的資料表BBOAD放在 taq.BBOAD&&f&g..end, taq.BBOAD&&f&g
+    data taq.BBOAD&&f&g..end(keep=date rec)  taq.BBOAD&&f&g(drop=date rec tt lead);  
+        # ... 進行一些基本的資料處理
+        # ...
+        # ...
+
+    # 將*.sas7bdat, *end.sas7bdat加入壓縮檔案
+    x "c:\progra~1\7-zip\7z a -t7z &iupathy\bboad&&f&g...7z &iupathy\bboad&&f&g...sas7bdat &iupathy\bboad&&f&g..end.sas7bdat";
+    
+    # 把計算的暫時資料表bboad，*.sas7bdat, *end.sas7bdat刪掉
+    proc delete data= taq.bboad&&f&g.. taq.bboad&&f&g..end; run;
+
+    ------------------------------------------------
+
+    # 計算EQY_US_ALL_TRADE_ADMIN
+    %let dnow=EQY_US_ALL_TRADE_ADMIN;
+    %let iupath=l:\2024\&dnow._&dy\&dnow._&dym; # iupath是指sas data source (*.gz的檔案)
+    filename ff pipe "C:\progra~1\7-Zip\7z e &iupath\&dnow._&&f&g...gz -y -so" LRECL=1000 ;  
+
+    # 計算放在taq.TRADEAD (taq => k:\master2024)
+    data taq.TRADEAD&&f&g..end(keep=date rec) taq.TRADEAD&&f&g(drop=date rec tt lead);  
+        # ......
+
+    # 這行只是從剛剛計算完的taq.TRADEAD，計算mean並且輸出到螢幕上
+    proc means data=taq.TRADEAD&&f&g; title "&&f&g"; run;
+
+    # 把計算完的壓縮並且刪掉
+    x "c:\progra~1\7-zip\7z a -t7z &iupathy\tradead&&f&g...7z &iupathy\tradead&&f&g...sas7bdat &iupathy\tradead&&f&g..end.sas7bdat";
+    proc delete data=taq.TRADEAD&&f&g..end taq.TRADEAD&&f&g; run;
+
+    ------------------------------------------------
+
+    # 計算EQY_US_ALL_ADMIN
+    # 產生taq.ctsAD
+
+    # ...同上
+
+    # 唯一多的語句：
+    # 創一個資料集ctsADMTX，計算msglen
+    data ctsADMTX; set taq.ctsADMTX&&f&g; msglen=length(Mestex); 
+
+    # 壓縮taq.ctsad & 刪掉
+
+    ------------------------------------------------
+
+    # 計算EQY_US_ALL_ADMIN
+    # 產生taq.utpAD
+
+    # ...同上
+
+    # 唯一多的語句：
+    # 創一個資料集utpADMTX，計算msglen
+    data utpADMTX; set taq.utpADMTX&&f&g; msglen=length(Mestex); 
+
+    # 壓縮taq.utpAD & 刪掉
+
+    ------------------------------------------------
+
+    # !!!
+    # 計算EQY_US_ALL_trade
+    %let dnow=EQY_US_ALL_trade;
+    %let iupath=l:\2024\&dnow._&dy\&dnow._&dym;
+
+    # 從*.gz讀取資料
+    filename ff pipe "C:\progra~1\7-Zip\7z e &iupath\&dnow._&&f&g...gz -y -so" LRECL=1000 ;  %*ct;
+
+    # 開始計算
+    # 首先，總共會產生26+1個資料集，
+    # tmp1.ct&&f&g..&&h&j，&&f&g是日期，&&h&j是字母，總共26個資料集
+    data  
+    %do j=1 %to 26; tmp1.ct&&f&g..&&h&j(compress=yes drop=pt tt trfts date rec lead) %end;  
+	    tmp1.ct&&f&g..end(keep=date rec);  
+
+        # 對資料集進行一些處理
+        infile  ff  firstobs=2 dlm='|' missover dsd; 
+        length tt $15 ex $ 1 Symbol $ 17 scond $ 4 size 6 price 8 tssi $ 1 corr $ 2 seqno 8 TradeID $ 20 Source $ 1 
+            trf $ 1 pt $15 trfts $15 tte $ 1;
+        format Time Ptime trftime time18.9;
+        label ex='Exchange' Symbol='Symbol' scond='Sale Condition' size='ct Volume' price='ct price' 
+            tssi='Trace Stop Stock Indicator' corr='Trace Correction' seqno='Sequence Number' TradeID='Trade ID' 
+            Source='Source of Trace' trf='Tracet Reporting Facility' ptime='Participant Timestamp' 
+            trftime='Trace Reporting Facility Timestamp' tte='Trace Through ExemptIndicator' ;
+        input lead $ @;
+
+        # 如果是最後一行就輸出到end資料集中
+        if lead='END' then do; 
+            input @1 lead $ date rec ; output tmp1.ct&&f&g..end; end;
+        # 反之
+        else do;
+            input @1 tt $ ex $ Symbol $ scond $ size price tssi $  corr $ seqno TradeID $ Source $  trf $ pt $ trfts $ tte $ ;
+            Time=hms(input(substr(tt,1,2),2.), input(substr(tt,3,2),2.), input(substr(tt,5,2),2.)+ 
+                input(substr(tt,7,9),9.)/1000000000);
+            Ptime=hms(input(substr(pt,1,2),2.), input(substr(pt,3,2),2.), input(substr(pt,5,2),2.)+ 
+                input(substr(pt,7,9),9.)/1000000000);
+            trftime=hms(input(substr(trfts,1,2),2.), input(substr(trfts,3,2),2.), input(substr(trfts,5,2),2.)+ 
+                input(substr(trfts,7,9),9.)/1000000000);
+            # 根據股票名稱"Symbol"的第一個字母的大寫，將output輸出到對應字母的資料集
+            # 這裡是放到tmp1，tmp1.ct&&f&g..&&h&j
+            %do j=1 %to 26; %if &j>1 %then else; if upcase(substr(symbol,1,1))="&&h&j" then output tmp1.ct&&f&g..&&h&j; %end;
+        end;
+    run;
+
+    ---------------------------------------------
+
+
+    # 計算EQY_US_ALL_NBBO
+    # 模式跟上面EQY_US_ALL_trade差不多，按照字母分類
+
+    %let dnow=EQY_US_ALL_NBBO;
+    %let iupath=l:\2024\&dnow._&dy\&dnow._&dym;
+
+    # 從*.gz讀取資料
+    filename ff pipe "C:\progra~1\7-Zip\7z e &iupath\&dnow._&&f&g...gz -y -so" LRECL=1000 ;  %*ct;
+    
+    # 開始計算
+    # 首先，總共會產生26+1個資料集，
+    # tmp1.nbbo&&f&g..&&h&j，&&f&g是日期，&&h&j是字母，總共26個資料集
+    data tmp2.nbbo&&f&g..end(keep=date rec)  
+        %do j=1 %to 26; tmp2.nbbo&&f&g..&&h&j(compress=yes drop=date rec tt pt ft lead) %end;   ;  
+        
+        # 對資料進行一些處理 
+        infile  ff  firstobs=2 dlm='|' missover dsd; 
+        length tt $ 15 ex $ 1 Symbol $ 17 bid 8 bidsiz 6 ofr 8 ofrsiz 6 cond $1 seqno 8 nbboind $ 1 nasdbbo $ 1 
+            adfmpid $ 1 cancel $ 1 SourceQ $ 1 bbcond $ 1 bbex  $ 1 bestbid 8 topbdp 6 bbmm $ 4 bocond $ 1 boex $ 1
+            bestofr 8 topbdp 6 bomm $ 4 luldi $ 1 luldin $ 1 sip $ 1 pt $ 15 ft $ 15 ssi $ 2 ;
+        format Time Ptime Ftime time18.9;
+        label tt='Time'  ex='Exchage' Symbol='Symbol' bid ='bid price' bidsiz ='Bid Size' ofr ='Offer Price' 
+            ofrsiz ='Offer Size' cond='Quote Condition' seqno='Sequence Numbe' nbboind ='National BBO Indicatorr' 
+            nasdbbo ='FINRA BBO Indicator' adfmpid='FINRA ADF MPID Indicator' cancel='Quote Cancel Correction' 
+            SourceQ ='Sourceof Quote' bbcond='Best Bid Quote Condition' bbex  ='Best Bid Exchange' bestbid ='Best bid price' 
+            topbdp='Best Bid Size' bbmm='Best Bid FINRA Market Maker ID' bocond='Best Offer Quote Condition' 
+            boex  ='Best Offer Exchange' bestofr ='Best Offer Price' 
+            topbdp ='Best Offer Size' bomm ='Best Offer FINRA Market Maker ID' luldi ='LULD BBO Indicator' 
+            luldin ='LULD NBBO Indicator' sip='SIP generated Message Identifier' ptime='Participant Timestamp' 
+            ftime='FINRA ADF Timestamp' ssi='Security Status Indicator';
+        input lead $ @;
+        # 如果是END就放到end資料集中
+        if lead='END' then do; 
+            input @1 lead $ date rec ; output tmp2.nbbo&&f&g..end; end;
+        # 反之
+        else do;
+                input @1 tt $ ex $ Symbol $  bid bidsiz ofr ofrsiz cond $ seqno nbboind $ nasdbbo $   adfmpid $ cancel $ 
+                    SourceQ $  bbcond $ bbex $ bestbid topbdp bbmm $ bocond $ boex $ bestofr topbdp bomm $ luldi $ luldin $ 
+                    sip $ pt $  ft $ ssi $;
+            Time=hms(input(substr(tt,1,2),2.), input(substr(tt,3,2),2.), input(substr(tt,5,2),2.)+ input(substr(tt,7,9),9.)/1000000000);
+            Ptime=hms(input(substr(pt,1,2),2.), input(substr(pt,3,2),2.), input(substr(pt,5,2),2.)+ input(substr(pt,7,9),9.)/1000000000);
+            Ftime=hms(input(substr(ft,1,2),2.), input(substr(ft,3,2),2.), input(substr(ft,5,2),2.)+ input(substr(ft,7,9),9.)/1000000000);
+            # 根據股票名稱第一個字母的大寫，放到相對應的資料集中
+            # 這裡是放到tmp2，tmp2.nbbo&&f&g..&&h&j
+            %do j=1 %to 26; %if &j>1 %then else; if upcase(substr(symbol,1,1))="&&h&j" then output tmp2.nbbo&&f&g..&&h&j; %end;
+        end;
+    run;
+
+    -------------------------------------------------------
+
+    # 最後進行一個summary的計算
+    # 從字母A到Z
+    %do j=1 %to 26;
+
+        proc print data=tmp1.ct&&f&g..&&h&j(obs=10); title "ct&&f&g..&&h&j"; run;
+        proc print data=tmp2.nbbo&&f&g..&&h&j(obs=10); title "tmp2.nbbo&&f&g..&&h&j"; run;
+
+        # ???
+        %*see if ftime is necessary;
+        proc means data=tmp2.nbbo&&f&g..&&h&j(where=(ftime^=.)) noprint N; var ftime;
+            output out=ftime n=fn;
+        %let dft=N;
+        data _null_; set ftime; if fn=0 then call symput('dft','Y'); run;
+        %if &dft=Y %then %do;
+            data tmp2.nbbo&&f&g..&&h&j(compress=yes); set tmp2.nbbo&&f&g..&&h&j(drop=ftime); run;
+        %end;
+        proc delete data=ftime; run;
+
+        %*3. ctq vol bs in separate files;
+        # 排序資料，tmp2.nbbo&&f&g..&&h&j，tmp1.ct&&f&g..&&h&j
+        proc sort data=tmp2.nbbo&&f&g..&&h&j(index=(symbol)  compress=yes); by symbol time seqno; run;
+        proc sort data=tmp1.ct&&f&g..&&h&j(index=(symbol)  compress=yes); by symbol time seqno; run;
+        
+        # 產生資料集tmp1.ctq&&f&g..&&h&j，tmp1.vol&&f&g..&&h&j => tmp1.ctq & tmp1.vol
+        data tmp1.ctq&&f&g..&&h&j tmp1.vol&&f&g..&&h&j(keep=symbol %do k=1 %to 26; siz&&me&k %end; ); 
+            length lrbs emobs $ 1;
+            # merge tmp2的nbbo、tmp1的ct，在相同日期&字母的情況下
+            merge tmp2.nbbo&&f&g..&&h&j(in=a1 keep=symbol time bestbid bestofr) tmp1.ct&&f&g..&&h&j(in=a2);
+            by symbol time;
+            array exsiz(26) %do k=1 %to 26; siz&&me&k %end;  ;
+            retain %do k=1 %to 26; siz&&me&k %end;  ;
+            mid=0.5*(bid+ofr);
+            if first.symbol then do; bid=.; ofr=.; do i=1 to 26; exsiz(i)=0; end; end;
+            %do l=1 %to 26; %if &l^=1 %then else; if ex="&&me&l" then kEx=&l; %end;
+            if a1 then do; bid=bestbid; ofr=bestofr; end;
+            if bid<ofr and bid not in (0 .) then do; *use the spread when there is no cross, otherwise use tick rule;
+            if price=bid then do; lrbs="S"; emobs="S"; end;
+                else if price=ofr then do; lrbs="B"; emobs="B"; end;
+                else if price>mid then lrbs="B"; else if price<mid then lrbs="S";
+                if kEx>0 then exsiz(kEx) + size;
+            end; *Lee and Ready: tick rule applies to price=mid only;
+            retain bid ofr;
+            # 如果a2，輸出到tmp1.ctq
+            # 如果是last.symbol，輸出到tmp1.vol
+            if a2 then do; output tmp1.ctq&&f&g..&&h&j; if last.symbol then output tmp1.vol&&f&g..&&h&j; end;
+        run;
+            *Ellis, MIchaely, and OHara: tick rule applies to all trades not on NBBO;
+            *the lag function cannot be applied to two lags or beyond so one has to resort to retain statement;
+            *bs files to sum up the number of buys and sells;
+        # 處理tmp1.ctq，產生tmp1.bs
+        data tmp1.ctq&&f&g..&&h&j(keep=symbol time  price size xlrbs xemobs ofr bid mid scond tssi corr source trf ex seqno
+            rename=(xlrbs=lrbs xemobs=emobs) rename=(xlrbs=lrbs xemobs=emobs)) 
+            tmp1.bs&&f&g..&&h&j(keep=symbol lrb lrs emob emos); 
+            length lrbs xlrbs emobs xemobs $ 1; 
+            set tmp1.ctq&&f&g..&&h&j; by symbol time;
+            lgp=lag(price); lglr=lag(lrbs); lgemo=lag(emobs);
+            if first.symbol then do; lgp=.; lglr=""; lgemo=""; xlrbs=""; xemobs=""; lrb=0; lrs=0; emob=0; emos=0; end;
+            if lrbs="" then do; 
+                if price>lgp then lrbs="B"; else if price<lgp then lrbs="S";  else lrbs=lglr; end;
+            if emobs="" then do; 
+                if price>lgp then emobs="B"; else if price<lgp then emobs="S";  else emobs=lgemo; end;
+            if lrbs^="" then xlrbs=lrbs; if emobs^="" then xemobs=emobs;
+            if lrbs="B" then lrb+1; else if lrbs="S" then lrs+1;
+            if emobs="B" then emob+1; else if lrbs="S" then emos+1;
+            output tmp1.ctq&&f&g..&&h&j; if last.symbol then output tmp1.bs&&f&g..&&h&j;
+            retain xlrbs xemobs; 
+        run;
+        proc means data=tmp1.ctq&&f&g..&&h&j; title "tmp1.ct&&f&g..&&h&j"; run;
+
+        %*4. time-weighted spread;
+        # 產生qsptmp、mbbotmp，從tmp2.nbbo輸入
+        data qsptmp(keep=symbol qmu rename=(qmu=qsp)) mbbotmp(keep=symbol nt mid rename=(mid=ben)
+            where=("9:29:59"t<nt<"16:01"t)); 
+            set tmp2.nbbo&&f&g..&&h&j(keep=symbol time bestbid bestofr);
+            by symbol;
+            mid=(bestbid+bestofr)/2;
+            if bestbid>0 then qsp=(bestofr-bestbid)/mid; else qsp=0;
+            nt=time-300; if qsp>0 then output mbbotmp; *create nt that is five minutes before;
+            lgq=lag(qsp); lgt=lag(time); 
+            if first.symbol then do; tsum=0; qsum=0; end;
+            else if lgq>0 then do; *do not use lgq from the first symbol to calculate spread;
+                if "9:30"t<time and lgt<"16:00"t then do; *end time must be after 9:30; *start time must be before 16:00;
+                    if lgt<"9:30"t then lgt="9:30"t; if time>"16:00"t then time="16:00"t;
+                    dur=time-lgt; 
+                    if dur>0 and lgq<2 then do; tsum+dur; qq=lgq*dur; qsum+qq; end;
+                end;
+            end;
+            if last.symbol then do;
+                if 2>qsp>0 and time<"16:00"t then do; * add the last quote to the data;
+                    dur="16:00"t-time; tsum+dur; qq=qsp*dur; qsum+qq;
+                end;
+                qmu=qsum/tsum; if qmu^=. then output qsptmp;
+            end;
+        run;
+
+        %*5. effective and realized spread;
+        # 產生rsptmp，透過merge tmp.ctp、mbbotmp
+        data rsptmp(keep=symbol emu lrrspmu emorspmu lrpimu emopimu rename=(
+            emu=esp lrrspmu=lrrsp emorspmu=emorsp lrpimu=lrpi emopimu=emopi)); 
+            merge mbbotmp(in=a rename=(nt=time)) 
+                tmp1.ctq&&f&g..&&h&j(in=b keep=symbol time size price ofr bid lrbs emobs
+                where=(ofr>bid and bid>0 and size>0 and "9:29:59"t<time<"16:01"t));
+            by symbol time;
+            if first.symbol then do; bench=.; nn=0; esum=0; lrnn=0; emonn=0; lrrspsum=0; emorspsum=0; 
+                lrpisum=0; emopisum=0; end;
+            if a then bench=ben; retain bench;
+            mid=(bid+ofr)/2; esp=2*abs(price-mid)/mid;
+            if lrbs="B" then do; lrrsp=2*(price-bench)/mid; lrpi=2*(bench-mid)/mid; end;
+                else do; lrrsp=2*(bench-price)/mid; lrpi=2*(mid-bench)/mid; end;
+            if emobs="B" then do; emorsp=2*(price-bench)/mid; emopi=2*(bench-mid)/mid; end;
+                else do; emorsp=2*(bench-price)/mid; emopi=2*(mid-bench)/mid; end;
+            if b and "9:29:59"t<time<"15:55:05"t then do;
+                if esp<2 then do; nn+1; esum+esp; end; *ad hoc approach to remove strange esp;
+                if -2<lrrsp<2 and -2<lrpi<2 then do; lrnn+1; lrrspsum+lrrsp; lrpisum+lrpi; end;   
+                if -2<emorsp<2 and -2<emopi<2 then do; emonn+1; emorspsum+emorsp; emopisum+emopi; end; 
+            end;
+            if last.symbol then do;  emu=esum/nn; lrrspmu=lrrspsum/lrnn; emorspmu=emorspsum/emonn; 
+                lrpimu=lrpisum/lrnn; emopimu=emopisum/emonn; 
+                if emu^=. then output; 
+            end;
+        run;
+        # 產生tmp1.tsp，透過merge qsp、rsp
+        data tmp1.tsp&&f&g..&&h&j; merge qsptmp rsptmp; by symbol; *date=&dfd; *attrib date length=4 format=date.; run;
+        proc delete data=qsptmp rsptmp mbbotmp; run;
+    %end;
+
+    # 把剛剛產生的tmp1.ctq, tmp1.tsp, tmp1.vol, tmp1.bs輸出到taq當中
+    data taq.ctq&&f&g; set %do j=1 %to 26; tmp1.ctq&&f&g..&&h&j %end; ;
+    data taq.tsp&&f&g; set %do j=1 %to 26; tmp1.tsp&&f&g..&&h&j %end; ;
+    data taq.vol&&f&g; set %do j=1 %to 26; tmp1.vol&&f&g..&&h&j %end; ;
+    data taq.bs&&f&g; set %do j=1 %to 26; tmp1.bs&&f&g..&&h&j %end; ;
+    
+    proc print data=taq.ctq&&f&g(obs=30); title "taq.ctq&&f&g"; run;
+    proc print data=taq.tsp&&f&g(obs=30); title "taq.tsp&&f&g"; run;
+    proc print data=taq.vol&&f&g(obs=30); title "taq.vol&&f&g"; run;
+    proc print data=taq.bs&&f&g(obs=30); title "taq.bs&&f&g"; run;
+
+    # 壓縮到iupathy => k:\master2024
+    **** zip cq&&f&g..&&h&j here;
+    x "c:\progra~1\7-zip\7z a -t7z &iupathy\ct&&f&g...7z c:\temp\ct&&f&g..*.sas7bdat c:\temp\ct&&f&g..end.sas7bdat -sdel";
+    x "c:\progra~1\7-zip\7z a -t7z &iupathy\nbbo&&f&g...7z d:\temp\nbbo&&f&g..*.sas7bdat d:\temp\nbbo&&f&g..end.sas7bdat -sdel";
+    
+    # 最後把tmp1.ctq, tmp1.tsp, tmp1.vol, tmp1.bs刪掉
+    proc delete data=%do j=1 %to 26; tmp1.tsp&&f&g..&&h&j tmp1.vol&&f&g..&&h&j 
+        tmp1.bs&&f&g..&&h&j  tmp1.ctq&&f&g..&&h&j  %end;   ; run;
+
+
+# SQL query: 
+對於一個日期，蒐集所有類別的資料，包含：
+EQY_US_ALL_REF_MASTER
+EQY_US_ALL_BBO_ADMIN
+EQY_US_ALL_TRADE_ADMIN
+EQY_US_ALL_ADMIN
+EQY_US_ALL_trade
+EQY_US_ALL_NBBO
+
+所以，只要提供日期就可以了，因為檔案沒有按照字母來分類。
+
+except_bbo
+
+db = nyse
+table = task, 
+table = bbo_task, except_bbo_task
+
+bbo 
+id filename alphabet date groupuuid 
+
+except_bbo_task  
+id date 

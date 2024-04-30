@@ -1,0 +1,26 @@
+每一次下載完BBO(一定要A-Z全部的字母都下載完)
+將新下載的gz檔案儲存到csv當中(或是另外的資料庫)
+
+產生一個csv (?)檔案，裡面包含所有的已經下載完成的資料(xxx.gz, xxx.gz之類的)
+
+啟動sasPy來執行sas program，
+
+新的sas program要依據csv裡面的所有檔案來進行處理，也就是執行macro readmaster的部分
+
+就檢查新的檔案
+
+
+*alphabet loop first and date loop second, so that the program can be run after
+some of the alphbets have been download;
+
+%do g=208 %to 209; %*;
+&&f&g...是對應到天數
+比方說這段程式碼會產生f208, f209(從某個表裡面找到對應關係，應該是一年當中的某一天)
+
+底下這段程式碼會產生f變數，跟日期有關(也就是fxxx對應到 年月日的八位數文字)
+data d2023; set dt.d2023 end=fini;
+	if _n_=1 then gg=1; else gg+1;
+	fg=compress('f' || gg);
+	call symput(fg,put(date,yymmddn8.));
+	if fini then call symput('df',left(trim(put(gg,3.))));
+run;

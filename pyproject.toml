@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "nyse-data-pipeline"
+version = "0.1.0"
+description = ""
+authors = ["chris-pan"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pytest = "^8.0.0"
+redis = "^5.0.1"
+mysql-connector-python = "^8.3.0"
+faker = "^23.2.1"
+py7zr = "^0.20.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
