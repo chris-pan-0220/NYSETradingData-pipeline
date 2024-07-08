@@ -1,4 +1,4 @@
-from nyse_data_pipeline.analysis import proc_bbo
+from nyse_data_pipeline.analysis import proc_bbo_safe
 
 if __name__ == '__main__':
-    proc_bbo()
+    proc_bbo_safe()

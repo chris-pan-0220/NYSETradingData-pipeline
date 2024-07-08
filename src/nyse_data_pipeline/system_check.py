@@ -52,7 +52,7 @@ def check_download_config(download_config: dict):
         if value is None:
             raise ValueError(f"Missing key '{key}' in SFTP configuration.")
         
-    # 检查下载路径是否存在
+    # check if download path exists
     local_dir_base = download_config['safe_to']
     dir_list = download_config['only'] # TODO: implement igonre
     for dir_name in dir_list:
@@ -71,19 +71,19 @@ def check_config(config: dict):
         if key not in config.keys():
             raise ValueError(f"Missing key '{key}' in configuration.")
 
-    # 检查SFTP配置是否完整
+    # check sftp config
     sftp_config = config.get('sftp')
     if not sftp_config:
         raise ValueError("SFTP configuration is missing or incomplete.")
     check_sftp_config(sftp_config)
 
-    # 检查Redis配置是否完整
+    # check redis config
     redis_config = config.get('redis')
     if not redis_config:
         raise ValueError("Redis configuration is missing or incomplete.")
     check_redis_config(redis_config)
 
-    # 检查下载配置是否完整
+    # check download config
     download_config = config.get('download')
     if not download_config:
         raise ValueError("Download configuration is missing or incomplete.")
@@ -170,14 +170,11 @@ def health_check(config: dict):
 # https://blog.csdn.net/SunJW_2017/article/details/120241354
 
 if __name__ == '__main__':
-    # 其他自定义的配置检查
-    # ...
-    
-    # 加载配置文件
+    # load config
     with open('./config.yaml', 'r') as config_file:
         config = yaml.safe_load(config_file)
 
-    # 检查配置
+    # check config
     check_config(config)
     print("Configuration is valid.")
 

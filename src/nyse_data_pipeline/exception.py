@@ -43,32 +43,7 @@ class DownloadTaskError(Exception):
 
     pass
  
-class MYSQLConnectionError(Exception): # TODO:
-    """"""
-
-    pass
-
-class GetTaskError(Exception):
-    """"""
-
-    pass
-
-class RegisterTaskError(Exception):
-    """"""
-
-    pass 
-
-class UnRegisterTaskError(Exception):
-    """"""
-
-    pass 
-
-class DeleteTaskError(Exception):
-    """"""
-
-    pass 
-
-class LoadTaskError(Exception):
+class MYSQLConnectionError(Exception):
     """"""
 
     pass
@@ -106,19 +81,7 @@ if __name__ == '__main__':
             return client
         except AuthenticationException as e:
             raise SFTPConnectMaxRetryError(3) from e
-    
-    # try:
-    #     connect()
-    # except SFTPConnectError as e:
-    #     # 在此处可以处理 SFTPConnectMaxRetryError 异常，或者继续向上层抛出
-    #     logging.exception("sftp over ssh connect error: ")
-    #     raise
-    # except Exception as e:
-    #     # 其他异常处理
-    #     logging.exception("An error occurred: ")
-    #     raise
 
-    # print("Continue")
     try:
         try:
             connect()

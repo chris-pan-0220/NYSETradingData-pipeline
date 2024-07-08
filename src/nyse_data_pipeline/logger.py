@@ -1,14 +1,13 @@
 import logging
 import sys
 
-# 定义自定义的过滤器类
 class FileSetFilter(logging.Filter):
     def __init__(self, allowed_files):
         super().__init__()
         self.allowed_files = allowed_files
 
     def filter(self, record):
-        # 只允许指定的文件名记录日志
+        # only allow assigned file
         return record.filename in self.allowed_files
 
 class Logger:
@@ -30,21 +29,21 @@ class Logger:
         
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-        # 创建流处理程序（输出到控制台）
+        # to stdout
         stream_handler = logging.StreamHandler(sys.stdout)
         stream_handler.setFormatter(formatter)
         stream_handler.setLevel(logging.INFO)
 
-        # 创建文件处理程序（输出到文件）
+        # to file
         file_handler = logging.FileHandler(self._log_file)
         file_handler.setFormatter(formatter)
         file_handler.setLevel(logging.INFO)
 
-        # 添加处理程序
+        # add handler 
         logger.addHandler(stream_handler)
         logger.addHandler(file_handler)
 
-        # 添加过滤器到文件处理程序
+        # add files filter
         # allowed_files = ["download.py", "system_check.py", "utils.py", "config.py", "exception.py", "logger.py"]
         # file_filter = FileSetFilter(allowed_files)
         # file_handler.addFilter(file_filter)
@@ -55,7 +54,6 @@ class Logger:
     def get_logger(self) -> logging.Logger:
         return self._logger
 
-# 使用示例
 if __name__ == "__main__":
     # logger = MyLogger("multiple_log.log", ['log1_t.py']).getLogger()
     # logger.info("This is a test message")
