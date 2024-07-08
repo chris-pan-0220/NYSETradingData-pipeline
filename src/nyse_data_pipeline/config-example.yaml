@@ -1,26 +1,9 @@
 sftp:
-  user: username
+  user: your_user_name
   host: sftp.nyse.com
   port: 22
-  key_file: pathto/keyfile
-  max_retry: 3 # self-defined variable
-redis:
-  host: localhost
-  port: 6379
-  db: 0
-mysql:
-  host: localhost
-  user: root
-  password: root_password
-  database: 
-    prod: nyse 
-    test: nyse_test
-  auth_plugin: mysql_native_password
-alert: # not used
-  from_addr: email_address
-  to_addr: 
-    - email_address
-  password: app_password
+  key_file: path_to_private_key
+  max_retry: 3 # self-defined variable. maximum retry times connect to sftp server
 download:
   create_dir: True  # True: create dir recursively | False: do not create
   safe_to:
@@ -32,7 +15,7 @@ download:
     EQY_US_ALL_TRADE: L:\2024\EQY_US_ALL_TRADE
     EQY_US_ALL_TRADE_ADMIN: L:\2024\EQY_US_ALL_TRADE_ADMIN
     SPLITS_US_ALL_BBO: E:\SPLITS_US_ALL_BBO
-  only:
+  only: # only download following types of files
     - SPLITS_US_ALL_BBO
     - EQY_US_ALL_ADMIN 
     - EQY_US_ALL_BBO_ADMIN
@@ -40,27 +23,32 @@ download:
     - EQY_US_ALL_REF_MASTER
     - EQY_US_ALL_TRADE
     - EQY_US_ALL_TRADE_ADMIN
-  ignore: # not implemented yet
-    - EQY_US_ALL_BBO   # This type of data is not used 
-    - EQY_US_ALL_REF_MASTER_PD # This type of data is not used 
+  start_year: 2024
+  start_month: 7
+  end_year: 2024
+  end_month: 7
 sas: 
-  task:
+  start_year: 2024
+  start_month: 5
+  start_day: 20
+  end_year: 2024
+  end_month: 5
+  end_day: 20
+  task:  
     bbo:
       program: C:\temp\bbo_test.sas
-      source:
+      source: # not used
         - SPLITS_US_ALL_BBO
       result:
-        sas_data: C:\temp
         7z: M:\2024cq
     except_bbo:
       program: C:\temp\except_bbo_test.sas
-      source: 
+      source: # not used
         - EQY_US_ALL_REF_MASTER
         - EQY_US_ALL_BBO_ADMIN
-        - EQY_US_ALL_TRADE_ADMIN
+        - EQY_US_ALL_TRADE_ADMIN # include EQY_US_ALL_ADMIN_CTS, EQY_US_ALL_ADMIN_UTP
         - EQY_US_ALL_ADMIN
         - EQY_US_ALL_TRADE
         - EQY_US_ALL_NBBO
       result:
         7z: k:\master2024
-  
