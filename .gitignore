@@ -13,6 +13,7 @@ other
 config.yaml
 *.log*
 test_script/
+*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
