@@ -425,6 +425,7 @@ def proc_except_bbo_safe():
                             find = False 
                             break
                     if not find:
+                        logger.info(f"Skip task {date_str}. Required source datasets are not all prepared.")
                         continue
                     
                     # process task
