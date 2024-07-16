@@ -135,10 +135,9 @@ def collect_task(start_year: int,
                             continue
                         day = remote_file.name[-5:-3] # day
                         # print(f"day={day}, start_day_str={str(start_day).zfill(2)}, end_day_str={str(end_day).zfill(2)}")
-                        if day < str(start_day).zfill(2):
-                            continue
-                        if day > str(end_day).zfill(2):
-                            continue
+                        if (year == start_year and month == start_month and day < str(start_day).zfill(2)) or \
+                        (year == end_year and month == end_month and day > str(end_day).zfill(2)):
+                            continue 
                         if remote_file.name not in (local_file.name for local_file in local_files):
                             continue
                         for local_file in local_files:
