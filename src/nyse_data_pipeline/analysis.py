@@ -224,6 +224,8 @@ def proc_bbo_safe():
         logger.info(f"Collect {len(task_list)} tasks.")
         for task in task_list:
             logger.info(f"file: {task.file_name}")
+
+        sas = saspy.SASsession()
         
         for task in task_list:
             # check sas data 
@@ -250,8 +252,6 @@ def proc_bbo_safe():
             hr_df.to_csv(
                 os.path.join(os.path.dirname(__file__), 'bbo.csv'), # modify !
                 index=False)
-
-            sas = saspy.SASsession()
 
             # r = sas.file_delete('work.filelist')
             # NOTE: if sas program exit abnormally, temporary lib, e.g. work.filelist,
